@@ -23,6 +23,11 @@ async function bootstrap() {
     res.sendFile(path.join(__dirname, 'tracker', 'tracker.js'));
   });
 
+  // Alias para asemejarse a matomo.php/matomo.js en la raíz
+  app.get(['/matomo.js', '/piwik.js'], (_req, res) => {
+    res.sendFile(path.join(__dirname, 'tracker', 'tracker.js'));
+  });
+
   app.use(collectRouter);
   app.use(reportsRouter);
 

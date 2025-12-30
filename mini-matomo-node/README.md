@@ -21,16 +21,31 @@ Ejemplo mínimo inspirado en Matomo: una API de ingesta con Express + MongoDB, u
    ```bash
    npm start
    ```
-4. Inserta el tracker en tu HTML:
+4. Inserta el tracker en tu HTML (se sirven aliases `/matomo.js` y `/piwik.js`). Puedes definir `window._mmq` antes de cargar el script para configurar el siteId, userId o comandos iniciales como en Matomo:
    ```html
-   <script src="http://localhost:4000/tracker.js" data-site-id="demo"></script>
+   <script>
+     window._mmq = window._mmq || [];
+     _mmq.push(['setSiteId', 'demo']);
+     _mmq.push(['setUserId', 'user-123']);
+     _mmq.push(['trackPageView']);
+   </script>
+   <script src="http://localhost:4000/tracker.js" data-collector="http://localhost:4000/collect"></script>
    ```
 
 ## Endpoints
-- `POST /collect`: recibe eventos con `siteId`, `url`, `referrer`, `eventType`, `timestamp`. El servidor infiere `ip` y `userAgent`.
+- `GET /collect`: endpoint de tracking compatible con el píxel de Matomo. Acepta query params como `idsite`/`url`/`urlref`/`action_name` y eventos (`e_c`, `e_a`, `e_n`, `e_v`), campañas (`utm_*`/`pk_*`), ecommerce (`ec_id`, `revenue`, `ec_items`), dimensiones personalizadas (`dimensionX`), heartbeats con `ping=1`/`time_on_page` y metadatos de pantalla/plugins. Devuelve un gif 1x1 (o `204` si se envía `send_image=0`).
+- `POST /collect`: ingesta JSON para pageviews/eventos con `siteId`, `url`, `referrer`, `eventType`, `timestamp` y `metadata`. El servidor infiere `ip`, `userAgent` y `accept-language`.
 - `GET /reports/pageviews`: devuelve agregados por día y URL para un `siteId` y rango temporal (`from`, `to`).
 
+## Tests
+- Matomo incluye una batería extensa de pruebas PHP/JS; aquí replicamos una mínima cobertura para el tracker y la ingesta usando Vitest.
+- Ejecuta los tests JavaScript:
+  ```bash
+  npm test
+  ```
+
 ## Notas
-- Se limita el tamaño del body y se valida `siteId`/`url` para evitar spam.
-- El tracker es de tamaño reducido y usa `fetch`; se puede extender con más metadatos o colas.
+- Se limita el tamaño del body y se valida `siteId`/`url` para evitar spam. Requests con user-agent de bots conocidos se descartan silenciosamente.
+- El tracker expone una cola `_mmq` con métodos `trackPageView`, `trackEvent`, `trackGoal`, `trackSiteSearch`, `trackEcommerceOrder`, `trackMediaEvent`, `trackJsError`, `ping` y setters (`setSiteId`, `setUserId`, `setCustomUrl`, `setDocumentTitle`, `setReferrerUrl`, `setCustomDimension`). Captura UTM/campañas del `location.search`, resolución de pantalla/plugins y envía heartbeats con `time_on_page`. Se autoenvía un pageview si no hay ninguno en la cola inicial.
+- Los eventos almacenan un `sessionId` derivado de visitante+site+ventana de 30 minutos y un objeto `attribution` (canal/campaña o referral/direct/organic) para facilitar informes de sesiones/embudos.
 - La retención de datos o anonimización de IP pueden añadirse sobre `src/core/enrichEvent.js`.

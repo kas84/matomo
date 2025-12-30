@@ -19,8 +19,25 @@ function coerceTimestamp(timestamp) {
   return date;
 }
 
+function isLikelyBot(userAgent) {
+  if (!userAgent || typeof userAgent !== 'string') return false;
+  return /bot|crawl|slurp|spider|headless|phantom|selenium/i.test(userAgent);
+}
+
+function sameHost(urlA, urlB) {
+  try {
+    const hostA = new URL(urlA).host;
+    const hostB = new URL(urlB).host;
+    return hostA === hostB;
+  } catch (_err) {
+    return false;
+  }
+}
+
 module.exports = {
   isValidSiteId,
   normalizeUrl,
   coerceTimestamp,
+  isLikelyBot,
+  sameHost,
 };

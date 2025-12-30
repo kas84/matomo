@@ -37,6 +37,13 @@ Ejemplo mínimo inspirado en Matomo: una API de ingesta con Express + MongoDB, u
 - `POST /collect`: ingesta JSON para pageviews/eventos con `siteId`, `url`, `referrer`, `eventType`, `timestamp` y `metadata`. El servidor infiere `ip`, `userAgent` y `accept-language`.
 - `GET /reports/pageviews`: devuelve agregados por día y URL para un `siteId` y rango temporal (`from`, `to`).
 
+## Tests
+- Matomo incluye una batería extensa de pruebas PHP/JS; aquí replicamos una mínima cobertura para el tracker y la ingesta usando Vitest.
+- Ejecuta los tests JavaScript:
+  ```bash
+  npm test
+  ```
+
 ## Notas
 - Se limita el tamaño del body y se valida `siteId`/`url` para evitar spam.
 - El tracker expone una cola `_mmq` con métodos `trackPageView`, `trackEvent`, `trackGoal`, `trackSiteSearch`, `ping`, además de setters (`setSiteId`, `setUserId`, `setCustomUrl`, `setDocumentTitle`, `setReferrerUrl`). Se autoenvía un pageview si no hay ninguno en la cola inicial.

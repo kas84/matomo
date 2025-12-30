@@ -1,5 +1,6 @@
 const express = require('express');
 const { buildEvent, mapQueryToEventPayload } = require('../core/enrichEvent');
+const { isLikelyBot } = require('../core/validation');
 const { getEventsCollection } = require('../db/mongo');
 
 const TRANSPARENT_GIF = Buffer.from(
@@ -33,8 +34,10 @@ router.get('/collect', async (req, res) => {
   }
 
   try {
-    const collection = await getEventsCollection();
-    await collection.insertOne(event);
+    if (!isLikelyBot(req.get('user-agent'))) {
+      const collection = await getEventsCollection();
+      await collection.insertOne(event);
+    }
     return sendTrackingPixel(req, res);
   } catch (err) {
     return res.status(500).json({ error: 'Failed to store event' });
@@ -53,8 +56,10 @@ router.post('/collect', async (req, res) => {
   }
 
   try {
-    const collection = await getEventsCollection();
-    await collection.insertOne(event);
+    if (!isLikelyBot(req.get('user-agent'))) {
+      const collection = await getEventsCollection();
+      await collection.insertOne(event);
+    }
     return res.status(201).json({ status: 'stored', id: event._id });
   } catch (err) {
     // Logable en sistemas reales

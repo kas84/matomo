@@ -19,6 +19,16 @@ describe('mapQueryToEventPayload', () => {
       search: 'docs',
       search_count: '2',
       ping: '1',
+      res: '1024x768',
+      cd: '24',
+      utm_campaign: 'spring',
+      utm_medium: 'cpc',
+      utm_source: 'adwords',
+      ec_id: 'order-1',
+      revenue: '19.9',
+      ec_items: JSON.stringify([{ sku: 'sku-1', price: 9.9 }]),
+      dimension1: 'vip',
+      plugins: 'java,pdf',
     });
 
     expect(payload).toMatchObject({
@@ -34,6 +44,11 @@ describe('mapQueryToEventPayload', () => {
         search: 'docs',
         searchCount: 2,
         ping: true,
+        screen: { resolution: '1024x768', colorDepth: 24 },
+        campaign: { name: 'spring', medium: 'cpc', source: 'adwords' },
+        ecommerce: { orderId: 'order-1', revenue: 19.9, items: [{ sku: 'sku-1', price: 9.9 }] },
+        customDimensions: { dimension1: 'vip' },
+        plugins: ['java', 'pdf'],
         event: {
           category: 'video',
           action: 'play',
@@ -84,6 +99,8 @@ describe('buildEvent', () => {
     });
     expect(event.timestamp.toISOString()).toBe('2024-02-02T12:00:00.000Z');
     expect(event._id).toHaveLength(12);
+    expect(event.sessionId).toHaveLength(16);
+    expect(event.attribution).toEqual({ channel: 'referral', referrer: 'https://ref.example.com/' });
 
     vi.useRealTimers();
   });

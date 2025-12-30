@@ -33,7 +33,7 @@ Ejemplo mínimo inspirado en Matomo: una API de ingesta con Express + MongoDB, u
    ```
 
 ## Endpoints
-- `GET /collect`: endpoint de tracking compatible con el píxel de Matomo. Acepta query params como `idsite`/`url`/`urlref`/`action_name` y eventos (`e_c`, `e_a`, `e_n`, `e_v`). Devuelve un gif 1x1 (o `204` si se envía `send_image=0`).
+- `GET /collect`: endpoint de tracking compatible con el píxel de Matomo. Acepta query params como `idsite`/`url`/`urlref`/`action_name` y eventos (`e_c`, `e_a`, `e_n`, `e_v`), campañas (`utm_*`/`pk_*`), ecommerce (`ec_id`, `revenue`, `ec_items`), dimensiones personalizadas (`dimensionX`), heartbeats con `ping=1`/`time_on_page` y metadatos de pantalla/plugins. Devuelve un gif 1x1 (o `204` si se envía `send_image=0`).
 - `POST /collect`: ingesta JSON para pageviews/eventos con `siteId`, `url`, `referrer`, `eventType`, `timestamp` y `metadata`. El servidor infiere `ip`, `userAgent` y `accept-language`.
 - `GET /reports/pageviews`: devuelve agregados por día y URL para un `siteId` y rango temporal (`from`, `to`).
 
@@ -45,6 +45,7 @@ Ejemplo mínimo inspirado en Matomo: una API de ingesta con Express + MongoDB, u
   ```
 
 ## Notas
-- Se limita el tamaño del body y se valida `siteId`/`url` para evitar spam.
-- El tracker expone una cola `_mmq` con métodos `trackPageView`, `trackEvent`, `trackGoal`, `trackSiteSearch`, `ping`, además de setters (`setSiteId`, `setUserId`, `setCustomUrl`, `setDocumentTitle`, `setReferrerUrl`). Se autoenvía un pageview si no hay ninguno en la cola inicial.
+- Se limita el tamaño del body y se valida `siteId`/`url` para evitar spam. Requests con user-agent de bots conocidos se descartan silenciosamente.
+- El tracker expone una cola `_mmq` con métodos `trackPageView`, `trackEvent`, `trackGoal`, `trackSiteSearch`, `trackEcommerceOrder`, `trackMediaEvent`, `trackJsError`, `ping` y setters (`setSiteId`, `setUserId`, `setCustomUrl`, `setDocumentTitle`, `setReferrerUrl`, `setCustomDimension`). Captura UTM/campañas del `location.search`, resolución de pantalla/plugins y envía heartbeats con `time_on_page`. Se autoenvía un pageview si no hay ninguno en la cola inicial.
+- Los eventos almacenan un `sessionId` derivado de visitante+site+ventana de 30 minutos y un objeto `attribution` (canal/campaña o referral/direct/organic) para facilitar informes de sesiones/embudos.
 - La retención de datos o anonimización de IP pueden añadirse sobre `src/core/enrichEvent.js`.
